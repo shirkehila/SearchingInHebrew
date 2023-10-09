@@ -1,6 +1,7 @@
 from typing import List
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+import os
 
 index_name = 'hebrew_search'
 documents = [
@@ -46,39 +47,15 @@ documents = [
 
 def init_index(es_connection: Elasticsearch):
     index_settings = {
-        "settings": {
-            "analysis": {
-                "filter": {
-                    "hebrew_stop": {
-                        "type": "stop",
-                        "stopwords": "_hebrew_"
-                    },
-                    "hebrew_keywords": {
-                        "type": "keyword_marker",
-                        "keywords": ["example"]
-                    }
-                },
-                "analyzer": {
-                    "hebrew_analyzer": {
-                        "type": "custom",
-                        "tokenizer": "standard",
-                        "filter": [
-                            "hebrew_stop",
-                            "hebrew_keywords"
-                        ]
-                    }
-                }
-            }
-        },
         "mappings": {
             "properties": {
                 "content": {
                     "type": "text",
-                    "analyzer": "hebrew_analyzer"
+                    "analyzer": "hebrew"
                 },
                 "title": {
                     "type": "text",
-                    "analyzer": "hebrew_analyzer"
+                    "analyzer": "hebrew"
                 },
                 "location": {
                     "type": "geo_point"  # Define the location field as a geo_point
@@ -117,9 +94,16 @@ def insert_into_es(docs: List[dict], es_connection: Elasticsearch):
     return success if success else failed
 
 
+def apply_license(license_file: str):
+    os.system(
+        """curl -X PUT -d @{license_file} -H "Content-Type: application/json" http://localhost:9200/_hebrew/license""".format(
+            license_file=license_file))
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     es_connection = get_elastic_conn()
+    apply_license("./elasticsearch/hebrew_license/elasticsearch-analysis-hebrew-2023-11-08.license")
     init_index(es_connection=es_connection)
     insert_into_es(docs=documents, es_connection=es_connection)
     # hits = search_elastic_hebrew(string_to_search="סיוע", es=es_connection)
