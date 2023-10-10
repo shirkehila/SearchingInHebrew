@@ -21,7 +21,7 @@ services:
       retries: 5
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.15.0  # Specify the Kibana version
+    image: docker.elastic.co/kibana/kibana:7.16.0  # Specify the Kibana version
     container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200  # Set the Elasticsearch host
